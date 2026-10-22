@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from importlib.metadata import version
 
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -52,7 +53,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "Manage projects, senders, templates, suppressions, and a durable email outbox. "
             "A successful provider send means accepted by Cloudflare, not inbox delivery."
         ),
-        version="0.1.0",
+        version=version("flaremailer-backend"),
         lifespan=lifespan,
         openapi_url="/openapi.json",
         docs_url="/docs",

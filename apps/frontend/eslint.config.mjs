@@ -5,5 +5,9 @@ import nextTypeScript from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
+  {
+    files: ["packages/braces/**/*.js", "scripts/**/*.cjs"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
   globalIgnores([".next/**", "src/generated/**"]),
 ]);
