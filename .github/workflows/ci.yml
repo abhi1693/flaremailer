@@ -1,0 +1,63 @@
+---
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [master]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NODE_OPTIONS: --max-old-space-size=3072
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.13.5"
+          python-version: "3.12"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: apps/frontend/.node-version
+      - name: Install locked Python dependencies
+        working-directory: apps/backend
+        run: uv sync --locked --all-groups
+      - name: Backend integration tests and static checks
+        working-directory: apps/backend
+        run: |
+          uv run --locked pytest
+          uv run --locked ruff check .
+          uv run --locked ruff format --check .
+          uv run --locked mypy app
+      - name: Audit Python runtime and development dependencies
+        working-directory: apps/backend
+        run: uv tool run pip-audit --path .venv/lib/python3.12/site-packages
+      - name: Export OpenAPI without a database connection
+        working-directory: apps/backend
+        run: uv run --locked python -c 'import json; from app.main import app; print(json.dumps(app.openapi(), sort_keys=True))' > "$RUNNER_TEMP/openapi.json"
+      - name: Install locked frontend dependencies
+        working-directory: apps/frontend
+        run: npm exec --yes --package=pnpm@12.15.0 -- pnpm install --frozen-lockfile
+      - name: Verify generated API client
+        working-directory: apps/frontend
+        run: |
+          ORVAL_INPUT="$RUNNER_TEMP/openapi.json" npm exec --yes --package=pnpm@12.15.0 -- pnpm generate:api
+          git diff --exit-code -- src/generated
+      - name: Frontend tests and production build
+        working-directory: apps/frontend
+        run: |
+          npm exec --yes --package=pnpm@12.15.0 -- pnpm lint
+          npm exec --yes --package=pnpm@12.15.0 -- pnpm typecheck
+          npm exec --yes --package=pnpm@12.15.0 -- pnpm test --maxWorkers=2
+          npm exec --yes --package=pnpm@12.15.0 -- pnpm test:dependency-security
+          npm exec --yes --package=pnpm@12.15.0 -- pnpm build
+      - name: Audit frontend runtime and development dependencies
+        working-directory: apps/frontend
+        run: npm exec --yes --package=pnpm@12.15.0 -- pnpm audit --audit-level=high

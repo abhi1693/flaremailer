@@ -184,3 +184,6 @@ project/key/domain flows, encrypted per-project provider credentials, safe templ
 rendering, suppressions, idempotency, activity, metrics, resend, worker
 success/retry/failure, provider payloads, permanent bounces, and OpenAPI operation ID
 uniqueness.
+
+The 0.1.1 dependency refresh uses SQLAlchemy 2.1 native typing without the removed
+mypy plugin. The OpenAPI version comes from installed package metadata.

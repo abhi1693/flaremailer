@@ -42,7 +42,7 @@ Next.js ───────────────► FastAPI ─────
 
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/)
-- Node.js 22+ and Corepack
+- Node.js 26.12.1+ and Corepack (pnpm 12.15.0)
 - PostgreSQL 15+; PostgreSQL 17 is recommended
 - `psql`, `createuser`, and `createdb` for local database administration
 
@@ -333,3 +333,15 @@ the configured Next.js port matches `CORS_ORIGINS` in `apps/backend/.env`.
 
 **Generated client is stale:** run FastAPI, execute `make orval`, review the
 generated changes, then run `make check`.
+
+## Next patch release
+
+Version 0.1.1 refreshes Python and frontend dependencies and regenerates the
+OpenAPI client. See [CHANGELOG.md](CHANGELOG.md) for versions and the documented
+ESLint/TypeScript compatibility limits. Frontend installs validate peers and allow
+only the required esbuild and unrs-resolver dependency build scripts. Run
+`pnpm test:dependency-security` from `apps/frontend` to verify the bounded braces
+parser used by development tooling.
+
+Pull-request CI installs frozen lockfiles, checks the generated API client, runs
+the full test and build suite, and audits frontend dependencies.

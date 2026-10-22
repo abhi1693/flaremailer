@@ -9,6 +9,7 @@ export default defineConfig({
       client: "react-query",
       mode: "tags-split",
       clean: true,
+      formatter: "prettier",
       override: {
         mutator: {
           path: "./src/lib/orval-fetcher.ts",
